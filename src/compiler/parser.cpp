@@ -1230,8 +1230,7 @@ AST::AbstractNode* Parser::parse_member_call() {
           this->advance();
         }
 
-        // Specialize the call node in case we are calling a member access node
-        // or an index access
+        // specialize the call node depending on what type of node is being called
         if (target->type() == AST::kTypeMember) {
           // Rip out the stuff we need from the member node
           AST::Member* member = target->as<AST::Member>();
@@ -1301,6 +1300,38 @@ AST::AbstractNode* Parser::parse_member_call() {
   }
 }
 
+AST::AbstractNode* Parser::parse_super() {
+
+  // Check if super is allowed at this position
+  if (!this->keyword_context.super_allowed) {
+    this->illegal_token();
+  }
+
+  Location location_start = this->token.location;
+  this->advance();
+  Location location_end = this->token.location;
+
+  // Parse arguments to call
+  AST::NodeList* args = new AST::NodeList();
+  this->expect_token(TokenType::LeftParen);
+  if (this->token.type != TokenType::RightParen) {
+    args->append_node(this->parse_expression());
+
+    // Parse all remaining arguments
+    while (this->token.type == TokenType::Comma) {
+      this->advance();
+      args->append_node(this->parse_expression());
+    }
+
+    location_end = this->token.location;
+    this->expect_token(TokenType::RightParen);
+  } else {
+    this->advance();
+  }
+
+  return (new AST::Super(args))->at(location_start, location_end);
+}
+
 AST::AbstractNode* Parser::parse_literal() {
   switch (this->token.type) {
     case TokenType::AtSign: {
@@ -1324,6 +1355,9 @@ AST::AbstractNode* Parser::parse_literal() {
       node->at(this->token.location);
       this->advance();
       return node;
+    }
+    case TokenType::Super: {
+      return this->parse_super();
     }
     case TokenType::Identifier: {
       AST::AbstractNode* id = new AST::Identifier(this->token.value);

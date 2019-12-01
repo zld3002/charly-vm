@@ -81,6 +81,7 @@ private:
   AST::AbstractNode* visit_callindex(AST::CallIndex* node, VisitContinue cont);
   AST::AbstractNode* visit_identifier(AST::Identifier* node, VisitContinue cont);
   AST::AbstractNode* visit_self(AST::Self* node, VisitContinue cont);
+  AST::AbstractNode* visit_super(AST::Super* node, VisitContinue cont);
   AST::AbstractNode* visit_member(AST::Member* node, VisitContinue cont);
   AST::AbstractNode* visit_index(AST::Index* node, VisitContinue cont);
   AST::AbstractNode* visit_null(AST::Null* node, VisitContinue cont);

@@ -56,6 +56,7 @@ struct KeywordContext {
   bool continue_allowed = false;
   bool return_allowed = false;
   bool yield_allowed = false;
+  bool super_allowed = false;
 };
 
 class Parser : public Lexer {
@@ -121,6 +122,7 @@ public:
   AST::AbstractNode* parse_pow();
   AST::AbstractNode* parse_typeof();
   AST::AbstractNode* parse_member_call();
+  AST::AbstractNode* parse_super();
   AST::AbstractNode* parse_literal();
   AST::AbstractNode* parse_array();
   AST::AbstractNode* parse_hash();

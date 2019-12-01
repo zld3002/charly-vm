@@ -174,6 +174,10 @@ public:
     cont();
     return node;
   }
+  virtual inline AST::AbstractNode* visit_super(AST::Super* node, VisitContinue cont) {
+    cont();
+    return node;
+  }
   virtual inline AST::AbstractNode* visit_member(AST::Member* node, VisitContinue cont) {
     cont();
     return node;
@@ -323,6 +327,8 @@ public:
       return walker->visit_identifier(node->as<AST::Identifier>(), cont);
     if (node->type() == AST::kTypeSelf)
       return walker->visit_self(node->as<AST::Self>(), cont);
+    if (node->type() == AST::kTypeSuper)
+      return walker->visit_super(node->as<AST::Super>(), cont);
     if (node->type() == AST::kTypeMember)
       return walker->visit_member(node->as<AST::Member>(), cont);
     if (node->type() == AST::kTypeIndex)

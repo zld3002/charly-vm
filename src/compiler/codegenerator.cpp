@@ -579,6 +579,11 @@ AST::AbstractNode* CodeGenerator::visit_self(AST::Self* node, VisitContinue) {
   return node;
 }
 
+AST::AbstractNode* CodeGenerator::visit_super(AST::Super* node, VisitContinue) {
+  this->push_fatal_error(node, "Compiler Error: All super AST nodes should have been removed");
+  return node;
+}
+
 AST::AbstractNode* CodeGenerator::visit_member(AST::Member* node, VisitContinue) {
   // Codegen target
   this->visit_node(node->target);

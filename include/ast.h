@@ -966,6 +966,32 @@ struct Self : public AbstractNode {
   }
 };
 
+// super(<arguments>)
+struct Super : public AbstractNode {
+  NodeList* arguments;
+
+  template <typename... Args>
+  Super(Args... args) : arguments(args...) {
+  }
+  Super(NodeList* l) : arguments(l) {
+  }
+
+  inline ~Super() {
+    if (arguments) {
+      delete arguments;
+    }
+  }
+
+  inline void dump(std::ostream& stream, size_t depth = 0) {
+    stream << std::string(depth, ' ') << "- Super:" << '\n';
+    this->arguments->dump(stream, depth + 1);
+  }
+
+  inline void visit(VisitFunc func) {
+    this->arguments = reinterpret_cast<NodeList*>(func(this->arguments));
+  }
+};
+
 // <target>.<symbol>
 struct Member : public AbstractNode {
   AbstractNode* target;
@@ -1409,7 +1435,6 @@ struct Return : public AbstractNode {
   }
 };
 
-
 // import <name>
 struct Import : public AbstractNode {
   std::string name;
@@ -1552,6 +1577,7 @@ const size_t kTypeCallIndex = typeid(CallIndex).hash_code();
 const size_t kTypeStackValue = typeid(StackValue).hash_code();
 const size_t kTypeIdentifier = typeid(Identifier).hash_code();
 const size_t kTypeSelf = typeid(Self).hash_code();
+const size_t kTypeSuper = typeid(Super).hash_code();
 const size_t kTypeMember = typeid(Member).hash_code();
 const size_t kTypeIndex = typeid(Index).hash_code();
 const size_t kTypeNull = typeid(Null).hash_code();
@@ -1594,7 +1620,7 @@ inline bool terminates_block(AbstractNode* node) {
 
 // Checks wether a given node is a literal that can be safely removed from a block
 inline bool is_literal(AbstractNode* node) {
-  return (node->type() == kTypeIdentifier || node->type() == kTypeSelf ||
+  return (node->type() == kTypeIdentifier || node->type() == kTypeSelf || node->type() == kTypeSuper ||
           node->type() == kTypeNull || node->type() == kTypeNan || node->type() == kTypeString ||
           node->type() == kTypeNumber || node->type() == kTypeBoolean || node->type() == kTypeFunction);
 }
@@ -1609,11 +1635,11 @@ inline bool yields_value(AbstractNode* node) {
           node->type() == kTypeANDMemberAssignment || node->type() == kTypeIndexAssignment ||
           node->type() == kTypeANDIndexAssignment || node->type() == kTypeCall || node->type() == kTypeCallMember ||
           node->type() == kTypeCallIndex || node->type() == kTypeStackValue || node->type() == kTypeIdentifier ||
-          node->type() == kTypeSelf || node->type() == kTypeMember || node->type() == kTypeYield ||
-          node->type() == kTypeIndex || node->type() == kTypeNull || node->type() == kTypeNan ||
-          node->type() == kTypeString || node->type() == kTypeNumber || node->type() == kTypeBoolean ||
-          node->type() == kTypeArray || node->type() == kTypeHash || node->type() == kTypeFunction ||
-          node->type() == kTypeClass || node->type() == kTypeImport);
+          node->type() == kTypeSelf || node->type() == kTypeSuper || node->type() == kTypeMember ||
+          node->type() == kTypeYield || node->type() == kTypeIndex || node->type() == kTypeNull ||
+          node->type() == kTypeNan || node->type() == kTypeString || node->type() == kTypeNumber ||
+          node->type() == kTypeBoolean || node->type() == kTypeArray || node->type() == kTypeHash ||
+          node->type() == kTypeFunction || node->type() == kTypeClass || node->type() == kTypeImport);
 }
 
 // Checks wether a given node is an assignment

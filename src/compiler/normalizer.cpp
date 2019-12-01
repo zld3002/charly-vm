@@ -613,9 +613,13 @@ AST::AbstractNode* Normalizer::visit_import(AST::Import* node, VisitContinue) {
 
   // Get the location of this call
   std::optional<Location> loc = node->location_start;
-  std::string source_filename = "(in buffer)";
+  std::string source_filename;
 
-  if (loc) source_filename = loc.value().filename;
+  if (loc) {
+    source_filename = loc.value().filename;
+  } else {
+    source_filename = "(in buffer)";
+  }
 
   AST::AbstractNode* new_node = new AST::Call(
     new AST::Identifier("__charly_internal_import"),
@@ -628,6 +632,27 @@ AST::AbstractNode* Normalizer::visit_import(AST::Import* node, VisitContinue) {
   delete node;
 
   return new_node;
+}
+
+AST::AbstractNode* Normalizer::visit_super(AST::Super* node, VisitContinue) {
+  // super(a, b)
+  //
+  // compiles to:
+  //
+  // Class.invoke_constructor(self.klass.parent_class, self, [a])
+
+  // self.klass.parent_class
+  AST::AbstractNode* parent_class = new AST::Member(new AST::Member(new AST::Self(), "klass"), "parent_class");
+
+  // Class.invoke_constructor()
+  AST::AbstractNode* call = new AST::CallMember(new AST::Identifier("Class"), "invoke_constructor", new AST::NodeList({
+    parent_class, new AST::Self(), new AST::Array(node->arguments)
+  }));
+
+  node->arguments = nullptr;
+  delete node;
+
+  return call;
 }
 
 AST::AbstractNode* Normalizer::wrap_in_block(AST::AbstractNode* node) {
